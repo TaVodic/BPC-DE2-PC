@@ -34,14 +34,14 @@
 int main(void)
 {
     // Set pins where LEDs are connected as output
-    GPIO_mode_output(&DDRB, LED_GREEN);
-    GPIO_mode_output(&DDRB, LED_RED);
+    GPIO_mode_output(&DDRB, PB0);
+    GPIO_mode_output(&DDRB, PB1);
     GPIO_mode_output(&DDRB, PB2);
 
     // Configuration of 16-bit Timer/Counter1 for LED blinking
     // Set the overflow prescaler to 262 ms and enable interrupt
-    TIM0_OVF_16MS   
-    TIM0_OVF_ENABLE
+    TIM1_OVF_33MS
+    TIM1_OVF_ENABLE
 
     // Enables interrupts by setting the global interrupt mask
     sei();
@@ -63,27 +63,18 @@ int main(void)
  * Function: Timer/Counter1 overflow interrupt
  * Purpose:  Toggle on-board LED.
  **********************************************************************/
-ISR(TIMER0_OVF_vect)
-{
-    static uint8_t no_of_overflows = 0;
-
-    no_of_overflows++;
-    if (no_of_overflows >= 6)
-    {
-        // Do this every 6 x 16 ms = 100 ms
-        no_of_overflows = 0;
-        PORTB = PORTB ^ (1<<LED_GREEN);
-    }
-    TCNT0 = 128;
-    // Else do nothing and exit the ISR
-}
-
 ISR(TIMER1_OVF_vect)
 {
-    PORTB = PORTB ^ (1<<LED_RED);
-}
+    static uint8_t led = 0;
+    static uint8_t count = 0;
 
-ISR(TIMER2_OVF_vect)
-{
-    PORTB = PORTB ^ (1<<PB2);
+    if (count > 2){
+        PORTB ^= (1<<led);
+
+        led++;    
+        if (led == 3) led = 0;
+        count = 0;
+    }
+    count++;
+
 }
