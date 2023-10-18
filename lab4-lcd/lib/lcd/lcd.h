@@ -351,6 +351,14 @@ extern void lcd_command(uint8_t cmd);
  */
 extern void lcd_data(uint8_t data);
 
+/**
+ * @brief    Toogle LCD backlight
+ *
+ * @param    state on/off
+ * @return   none
+ */
+extern void lcd_backlight(uint8_t state);
+
 
 /**
  * @brief macros for automatically storing string constant in program memory

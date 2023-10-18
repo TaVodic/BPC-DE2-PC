@@ -597,3 +597,24 @@ void lcd_init(uint8_t dispAttr)
     lcd_command(LCD_MODE_DEFAULT); /* set entry mode               */
     lcd_command(dispAttr);         /* display/cursor control       */
 }/* lcd_init */
+
+
+/*************************************************************************
+*  
+*  Input:     on/off
+*  Returns:   none
+*************************************************************************/
+void lcd_backlight(uint8_t state)
+{
+    switch (state)
+    {
+    case 0:
+        PORTB &= ~(1<<PB2);
+        break;
+    case 1:
+        PORTB |= (1<<PB2);
+        break;    
+    default:
+        break;
+    }
+}/* lcd_puts_p */

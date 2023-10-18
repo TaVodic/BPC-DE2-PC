@@ -34,7 +34,7 @@
 #include <lcd.h>            // Peter Fleury's LCD library
 #include <stdlib.h>         // C library. Needed for number conversions
 
-#define N_CHARS 1
+#define N_CHARS 5
 
 
 /* Function definitions ----------------------------------------------*/
@@ -47,12 +47,10 @@
 int main(void)
 {
     // Initialize display
-    lcd_init(LCD_DISP_ON_CURSOR);
+    lcd_init(LCD_DISP_ON);
 
-    // Put string(s) on LCD screen
-    lcd_gotoxy(4, 1);
-    lcd_puts("LCD Test");
-    lcd_putc('!');
+    GPIO_mode_output(&DDRB, PB2);
+    lcd_backlight(1);
 
     // Configuration of 8-bit Timer/Counter2 for Stopwatch update
     // Set the overflow prescaler to 16 ms and enable interrupt
@@ -62,13 +60,49 @@ int main(void)
 
     // Custom character definition using https://omerk.github.io/lcdchargen/
     uint8_t customChar[N_CHARS*8] = {
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+
+        0b11000,
+        0b11000,
+        0b11000,
+        0b11000,
+        0b11000,
+        0b11000,
+        0b11000,
+        0b11000,
+
+        0b11100,
+        0b11100,
+        0b11100,
+        0b11100,
+        0b11100,
+        0b11100,
+        0b11100,
+        0b11100,
+
+        0b11110,
+        0b11110,
+        0b11110,
+        0b11110,
+        0b11110,
+        0b11110,
+        0b11110,
+        0b11110,
+
         0b11111,
-        0b11011,
-        0b10001,
-        0b11011,
-        0b11011,
-        0b10001,
-        0b11011,
+        0b11111,
+        0b11111,
+        0b11111,
+        0b11111,
+        0b11111,
+        0b11111,
         0b11111
     };
 
@@ -78,11 +112,6 @@ int main(void)
         lcd_data(customChar[i]);
     lcd_command(1<<LCD_DDRAM);       // Set addressing back to DDRAM (Display Data RAM)
                                      // ie to character codes
-
-    // Display symbol with Character code 0
-    lcd_gotoxy(0, 1);
-    lcd_putc(0x00);
-
 
     // Enables interrupts by setting the global interrupt mask
     sei();
@@ -116,7 +145,7 @@ ISR(TIMER2_OVF_vect)
     char string_min[3];   // String for converted numbers by itoa()
 
     no_of_overflows++;
-    if (no_of_overflows >= 1)
+    if (no_of_overflows >= 6)
     {
         // Do this every 6 x 16 ms = 100 ms
         no_of_overflows = 0;
@@ -125,17 +154,22 @@ ISR(TIMER2_OVF_vect)
         tenths++;
         if (tenths > 9){
             tenths = 0;
-            sec++;
+            sec++;                     
         }
         if (sec > 59){
             sec = 0;
-            min++;
+            min++;            
         }
-
-        if(min == 1 && sec == 10){
+        if(min == 2){
             tenths = 0;
             sec = 0;
             min = 0;
+        }
+
+        if (sec % 2 == 1){ // toogle lcd backlight
+            lcd_backlight(1);
+        } else{
+            //lcd_backlight(0);
         }
 
         itoa(tenths, string_tenths, 10);  // Convert decimal value to string
@@ -143,28 +177,48 @@ ISR(TIMER2_OVF_vect)
         itoa(min, string_min, 10);  // Convert decimal value to string
         // Display "00:00.tenths"
         if(min < 10){
-            lcd_gotoxy(5, 0);
+            lcd_gotoxy(0, 0);
             lcd_puts("0");
-            lcd_gotoxy(6, 0);
+            lcd_gotoxy(1, 0);
             lcd_puts(string_min);
         }else{
-            lcd_gotoxy(6, 0);
-            lcd_puts(string_min);
+            lcd_gotoxy(0, 0);
+            lcd_puts(string_min);             
         }        
-        lcd_gotoxy(7, 0);
         lcd_puts(":");
         if(sec < 10){
-            lcd_gotoxy(8, 0);
+            lcd_gotoxy(3, 0);
             lcd_puts("0");
-            lcd_gotoxy(9, 0);
+            lcd_gotoxy(4, 0);
             lcd_puts(string_sec);
         }else{
-            lcd_gotoxy(8, 0);
+            lcd_gotoxy(3, 0);
             lcd_puts(string_sec);
         }
-        lcd_gotoxy(10, 0);
         lcd_puts(".");
         lcd_puts(string_tenths);
+
+        lcd_gotoxy(10, 0);
+        itoa(sec*sec, string_sec, 10);
+        lcd_puts(string_sec);        
     }
-    // Else do nothing and exit the ISR
+
+
+    static uint8_t count = 0;
+    static uint8_t pos = 0;            
+    if (count == 5) {
+        count = 0;
+        pos++;
+    }
+    if (pos == 10){
+        count = 0;
+        pos = 0;
+        lcd_gotoxy(0,1);
+        lcd_puts("          ");
+    }
+    lcd_gotoxy(pos,1);
+    lcd_putc(count);
+    count++; 
+    
+    
 }
